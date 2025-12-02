@@ -29,7 +29,7 @@ class Softmax:
         self.output = exp/sum
         return self.output
     
-class Loss_CategoricalCrossentropy:
+class Loss:
     def forward(self, y_pred, y_true):
         y_pred = np.clip(y_pred, 0.0000001, 0.99999999)
         predicted = y_pred[range(y_pred.shape[0]), y_true]
@@ -48,7 +48,7 @@ activation = Activation()
 hidden_layer2 = Layer(n_inputs=128, n_neurons=64)
 output_layer = Layer(n_inputs=64, n_neurons=10)
 output_layer_by_probability = Softmax()
-losscalc = Loss_CategoricalCrossentropy()
+losscalc = Loss()
 
 
 # Layer1 -> ReLU -> Layer2 -> ReLU -> OutputLayer -> Softmax
@@ -59,4 +59,19 @@ second_activation = activation.forward(input=second_layer)
 output_layer_output = output_layer.fpropagation(input=second_activation)
 results =  output_layer_by_probability.forward(input=output_layer_output)
 loss = losscalc.forward(y_pred=results, y_true=labels)
-print("Loss:", loss) # ~-ln(1/10)
+print("Loss:", loss) # ~ -ln(1/10)
+
+class Learning:
+    def __init__(self, activation, loss):
+        self.activation = Softmax()
+        self.loss = Loss()
+    def forward(self, input, labels):
+        self.result = self.activation.forward(input)
+        self.lossf = self.loss.forward(self.result, labels)
+        return self.lossf
+    def backward(self, labels):
+        probabilities_normalized = self.result.copy()
+        probabilities_normalized[range(probabilities_normalized.shape[0]), labels] -= 1
+        backward_pass = probabilities_normalized / probabilities_normalized.shape[0]
+        return backward_pass
+
