@@ -13,11 +13,11 @@ class Layer:
         self.weights = np.random.randn(n_inputs, n_neurons) * 0.01
         self.biases = np.zeros((1, n_neurons))
     def fpropagation(self, input):
-        self.inputs = input 
+        self.input = input 
         self.output = np.dot(input, self.weights) + self.biases  
         return self.output
     def backward(self, backwardpass):
-        self.dweights = np.dot(self.inputs.T, backwardpass)
+        self.dweights = np.dot(self.input.T, backwardpass)
         self.dbiases = np.sum(backwardpass, axis=0, keepdims=True)
         self.dinputs = np.dot(backwardpass, self.weights.T)
         return self.dinputs
@@ -47,9 +47,8 @@ class Loss:
         mean_loss = np.mean(loss)
         return mean_loss
 
-
 class Backpropagation:
-    def __init__(self, activation, loss):
+    def __init__(self):
         self.activation = Softmax()
         self.loss = Loss()
     def forward(self, input, labels):
@@ -61,31 +60,12 @@ class Backpropagation:
         probabilities_normalized[range(probabilities_normalized.shape[0]), labels] -= 1
         dvalues = probabilities_normalized / probabilities_normalized.shape[0]
         return dvalues
-    
-pathimagess = 'dataset/train-images.idx3-ubyte'
-pathlabelss = 'dataset/train-labels.idx1-ubyte'
-images, labels = data_handling(pathimagess, pathlabelss)
 
-hidden_layer1 = Layer(n_inputs=784, n_neurons=128)
-activation = Activation()
-hidden_layer2 = Layer(n_inputs=128, n_neurons=64)
-output_layer = Layer(n_inputs=64, n_neurons=10)
-output_layer_by_probability = Softmax()
-losscalc = Loss()
-
-
-# Layer1 -> ReLU -> Layer2 -> ReLU -> OutputLayer -> Softmax
-first_layer = hidden_layer1.fpropagation(input=images)
-first_activate = activation.forward(input=first_layer)
-second_layer = hidden_layer2.fpropagation(input=first_activate)
-second_activation = activation.forward(input=second_layer)
-output_layer_output = output_layer.fpropagation(input=second_activation)
-results =  output_layer_by_probability.forward(input=output_layer_output)
-loss = losscalc.forward(y_pred=results, y_true=labels)
-print("Loss:", loss) # ~ -ln(1/10)
-
-# Your Current Name,Standard Name,Meaning
-# backwardpass,dvalues,The gradient coming in from the layer ahead.
-# bweights,dweights,The calculated gradient for self.weights.
-# bbiasesbiases,dbiases,The calculated gradient for self.biases.
-# bbackward,dinputs,The gradient to pass back to the previous layer.
+class Optimizer_SGD:
+    def __init__(self, input):
+        self.learning_rate = input
+    def adjust_parameters(self, layer):
+        step_weights = np.multiply(self.learning_rate, layer.dweights)
+        layer.weights -= step_weights
+        step_biases = np.multiply(self.learning_rate, layer.dbiases)
+        layer.biases -= step_biases
